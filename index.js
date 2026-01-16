@@ -61,21 +61,33 @@ bot.on("document", async (msg) => {
   }
 
   try {
+
+		const originalFileName = file.file_name;
+
     bot.sendMessage(chatId, "📥 Descargando archivo...");
 
-    const filePath = await bot.downloadFile(file.file_id, DOWNLOADS_DIR);
+    const downloadedPath = await bot.downloadFile(file.file_id, DOWNLOADS_DIR);
+
+		const finalPath = path.join(DOWNLOADS_DIR, originalFileName);
+  	fs.renameSync(downloadedPath, finalPath);
+
+  	log("INFO", "Archivo renombrado", {
+    	from: downloadedPath,
+    	to: finalPath,
+  	});
+
 
     bot.sendMessage(chatId, "📧 Enviando al Kindle...");
 
     await transporter.sendMail({
       from: `"Telegram Kindle Bot" <${process.env.EMAIL_USER}>`,
-      to: process.env.KINDLE_EMAIL,
+      to: kindleEmail,
       subject: "Kindle EPUB",
       text: "Archivo enviado automáticamente desde Telegram",
       attachments: [
         {
-          filename: path.basename(filePath),
-          path: filePath,
+          filename: originalFileName,
+          path: finalPath,
         },
       ],
     });
@@ -83,15 +95,16 @@ bot.on("document", async (msg) => {
     log("INFO", "Enviando EPUB al Kindle", {
       chatId,
       to: kindleEmail,
-      file: path.basename(filePath),
+      file: originalFileName,
     });
 
     bot.sendMessage(chatId, "✅ EPUB enviado correctamente al Kindle");
 
-    fs.unlinkSync(filePath); // limpiar archivo
+    fs.unlinkSync(finalPath); // limpiar archivo
   } catch (err) {
     console.error(err);
     bot.sendMessage(chatId, "❌ Error al enviar el archivo");
+		
     log("ERROR", "Error enviando EPUB", {
       chatId,
       error: err.message,
