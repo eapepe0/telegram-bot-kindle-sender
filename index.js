@@ -37,13 +37,17 @@ const transporter = nodemailer.createTransport({
 });
 
 bot.on("document", async (msg) => {
+
+  const chatId = msg.chat.id;
+  const file = msg.document;
+	
   log("INFO", "Documento recibido", {
     chatId,
     filename: file.file_name,
     size: file.file_size,
   });
-  const chatId = msg.chat.id;
-  const file = msg.document;
+
+
 
   if (!file.file_name.endsWith(".epub")) {
     bot.sendMessage(chatId, "❌ Solo acepto archivos EPUB");
