@@ -40,13 +40,19 @@ bot.on("document", async (msg) => {
 
   const chatId = msg.chat.id;
   const file = msg.document;
-	
+
+	const kindleEmail = userKindleMails[chatId];
+
   log("INFO", "Documento recibido", {
     chatId,
     filename: file.file_name,
     size: file.file_size,
   });
 
+	if (!kindleEmail) {
+  	bot.sendMessage(chatId, '⚠️ Primero configurá tu email Kindle con /setmail');
+  	return;
+	}
 
 
   if (!file.file_name.endsWith(".epub")) {
